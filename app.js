@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-// import _ from "lodash";        // nice string manipulation
+// import _ from "lodash"; // nice string manipulation
 // import https from "https";     // for forming external get requests
 
 // local includes
@@ -49,6 +49,7 @@ const articleSchema = new mongoose.Schema({
         type: String,
         required: [true, "ERROR: Your article post needs a title."],
     },
+    normalizedTitle: String,
     content: {
         type: String,
         required: [true, "ERROR: Your article post needs some content."],
@@ -69,7 +70,6 @@ app.listen(port, () => {
 // ------------------------------------ Routes ---------------------------------------
 // -----------------------------------------------------------------------------------
 app.route("/articles")
-    // -------------------------------------------------------------------------------
     // GET /articles will return all articles in the collection
     .get((req, res) => {
         Article.find((err, articles) => {
@@ -83,11 +83,11 @@ app.route("/articles")
         });
     })
 
-    // -------------------------------------------------------------------------------
     // POST /articles will add a new article specified by the body
     .post((req, res) => {
         const newArticle = new Article({
             title: req.body.title,
+            normalizedTitle: req.body.title.toLowerCase(),
             content: req.body.content,
         });
 
@@ -95,14 +95,11 @@ app.route("/articles")
             if (err) {
                 res.send(err);
             } else {
-                res.send(
-                    "Successfully added your article on " + req.body.title
-                );
+                res.send("Successfully added your article: " + req.body.title);
             }
         });
     })
 
-    // -------------------------------------------------------------------------------
     // DELETE /articles will delete all articles from the database
     .delete((req, res) => {
         Article.deleteMany((err) => {
@@ -114,51 +111,42 @@ app.route("/articles")
         });
     });
 
-// // -----------------------------------------------------------------------------------
-// // --------------------------------- Get Requests ------------------------------------
-// // -----------------------------------------------------------------------------------
-// // /articles will return all articles in the collection
-// app.get("/articles", (req, res) => {
-//     Article.find((err, articles) => {
-//         if (err) {
-//             // console.log(err);
-//             res.send(err);
-//         } else {
-//             // console.log(articles);
-//             res.send(articles);
-//         }
-//     });
-// });
+// -----------------------------------------------------------------------------------
+app.route("/articles/:title")
 
-// // -----------------------------------------------------------------------------------
-// // -------------------------------- Post Requests ------------------------------------
-// // -----------------------------------------------------------------------------------
-// // /articles will add a new article specified by the body
-// app.post("/articles", (req, res) => {
-//     const newArticle = new Article({
-//         title: req.body.title,
-//         content: req.body.content,
-//     });
+    // GET /articles/:articleTitle will fetch this specific article
+    .get((req, res) => {
+        // const normalizedTitle = _.lowerCase(req.params.title);
+        const normalizedTitle = req.params.title.toLowerCase();
 
-//     newArticle.save((err) => {
-//         if (err) {
-//             res.send(err);
-//         } else {
-//             res.send("Successfully added your article on " + req.body.title);
-//         }
-//     });
-// });
+        Article.find({ normalizedTitle: normalizedTitle }, (err, articles) => {
+            if (err) {
+                res.send(err);
+            } else {
+                if (!articles) {
+                    // if no errors, but no article was found
+                    res.send(
+                        "The article '" + normalizedTitle + "' was not found."
+                    );
+                } else {
+                    // if article was found
+                    res.send(articles);
+                }
+            }
+        });
+    })
 
-// // -----------------------------------------------------------------------------------
-// // ------------------------------- Delete Requests -----------------------------------
-// // -----------------------------------------------------------------------------------
-// // /articles will delete all articles from the database
-// app.delete("/articles", (req, res) => {
-//     Article.deleteMany((err) => {
-//         if (err) {
-//             res.send(err);
-//         } else {
-//             res.send("Successfully deleted all articles.");
-//         }
-//     });
-// });
+    // PUT /articles/:articleTitle will update this specific article
+    .put((req, res) => {
+        const normalizedTitle = req.params.title.toLowerCase();
+    })
+
+    // PATCH /articles/:articleTitle will update this specific article
+    .patch((req, res) => {
+        const normalizedTitle = req.params.title.toLowerCase();
+    })
+
+    // DELETE /articles/:articleTitle will delete this specific article from the database
+    .delete((req, res) => {
+        const normalizedTitle = req.params.title.toLowerCase();
+    });
