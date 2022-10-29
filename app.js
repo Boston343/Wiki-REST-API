@@ -49,7 +49,6 @@ const articleSchema = new mongoose.Schema({
         type: String,
         required: [true, "ERROR: Your article post needs a title."],
     },
-    normalizedTitle: String,
     content: {
         type: String,
         required: [true, "ERROR: Your article post needs some content."],
@@ -87,7 +86,6 @@ app.route("/articles")
     .post((req, res) => {
         const newArticle = new Article({
             title: req.body.title,
-            normalizedTitle: req.body.title.toLowerCase(),
             content: req.body.content,
         });
 
@@ -112,41 +110,151 @@ app.route("/articles")
     });
 
 // -----------------------------------------------------------------------------------
-app.route("/articles/:title")
+app.route("/articles/:articleTitle")
 
     // GET /articles/:articleTitle will fetch this specific article
     .get((req, res) => {
-        // const normalizedTitle = _.lowerCase(req.params.title);
-        const normalizedTitle = req.params.title.toLowerCase();
-
-        Article.find({ normalizedTitle: normalizedTitle }, (err, articles) => {
-            if (err) {
-                res.send(err);
-            } else {
-                if (!articles) {
-                    // if no errors, but no article was found
-                    res.send(
-                        "The article '" + normalizedTitle + "' was not found."
-                    );
+        Article.find(
+            {
+                title: {
+                    // regex for the entire string (not just part matching), and ignoring case
+                    $regex: "^" + req.params.articleTitle + "$",
+                    $options: "i",
+                },
+            },
+            (err, articles) => {
+                if (err) {
+                    res.send(err);
                 } else {
-                    // if article was found
-                    res.send(articles);
+                    if (!(Array.isArray(articles) && articles.length)) {
+                        // if no errors, but no article was found
+                        res.send(
+                            "The article '" +
+                                req.params.articleTitle +
+                                "' was not found."
+                        );
+                    } else {
+                        // if article was found
+                        res.send(articles);
+                    }
                 }
             }
-        });
+        );
     })
 
-    // PUT /articles/:articleTitle will update this specific article
+    // PUT /articles/:articleTitle will update this specific article - the ENTIRE document
     .put((req, res) => {
-        const normalizedTitle = req.params.title.toLowerCase();
+        Article.replaceOne(
+            {
+                title: {
+                    // regex for the entire string (not just part matching), and ignoring case
+                    $regex: "^" + req.params.articleTitle + "$",
+                    $options: "i",
+                },
+            },
+            {
+                title: req.body.title,
+                content: req.body.content,
+            },
+            (err, updateResults) => {
+                if (err) {
+                    res.send(err);
+                } else {
+                    // check if we actually found the article
+                    if (
+                        updateResults.acknowledged &&
+                        updateResults.matchedCount
+                    ) {
+                        res.send(
+                            "Successfully replaced article: '" +
+                                req.params.articleTitle +
+                                "', with article: '" +
+                                req.body.title +
+                                "'"
+                        );
+                    } else {
+                        // command was acknowledged but no match was found
+                        res.send(
+                            "The article '" +
+                                req.params.articleTitle +
+                                "' was not found."
+                        );
+                    }
+                }
+            }
+        );
     })
 
-    // PATCH /articles/:articleTitle will update this specific article
+    // PATCH /articles/:articleTitle will update this specific article - just the content
     .patch((req, res) => {
-        const normalizedTitle = req.params.title.toLowerCase();
+        Article.updateOne(
+            {
+                title: {
+                    // regex for the entire string (not just part matching), and ignoring case
+                    $regex: "^" + req.params.articleTitle + "$",
+                    $options: "i",
+                },
+            },
+            { $set: req.body },
+            (err, updateResults) => {
+                if (err) {
+                    res.send(err);
+                } else {
+                    // check if we actually found the article
+                    if (
+                        updateResults.acknowledged &&
+                        updateResults.matchedCount
+                    ) {
+                        res.send(
+                            "Successfully updated article: " +
+                                req.params.articleTitle
+                        );
+                    } else {
+                        // command was acknowledged but no match was found
+                        res.send(
+                            "The article '" +
+                                req.params.articleTitle +
+                                "' was not found."
+                        );
+                    }
+                }
+            }
+        );
     })
 
     // DELETE /articles/:articleTitle will delete this specific article from the database
     .delete((req, res) => {
-        const normalizedTitle = req.params.title.toLowerCase();
+        Article.deleteOne(
+            {
+                title: {
+                    // regex for the entire string (not just part matching), and ignoring case
+                    $regex: "^" + req.params.articleTitle + "$",
+                    $options: "i",
+                },
+            },
+            (err, deleteResults) => {
+                console.log(deleteResults);
+                if (err) {
+                    res.send(err);
+                } else {
+                    // check if we actually found the article
+                    if (
+                        deleteResults.acknowledged &&
+                        deleteResults.deletedCount
+                    ) {
+                        res.send(
+                            "Successfully deleted article: " +
+                                req.params.articleTitle
+                        );
+                    } else {
+                        // command was acknowledged but no match was found
+                        res.send(
+                            "The article '" +
+                                req.params.articleTitle +
+                                "' was not found."
+                        );
+                    }
+                }
+            }
+        );
     });
