@@ -84,3 +84,32 @@ app.get("/articles", (req, res) => {
 // -----------------------------------------------------------------------------------
 // -------------------------------- Post Requests ------------------------------------
 // -----------------------------------------------------------------------------------
+// /articles will add a new article specified by the body
+app.post("/articles", (req, res) => {
+    const newArticle = new Article({
+        title: req.body.title,
+        content: req.body.content,
+    });
+
+    newArticle.save((err) => {
+        if (err) {
+            res.send(err);
+        } else {
+            res.send("Successfully added your article on " + req.body.title);
+        }
+    });
+});
+
+// -----------------------------------------------------------------------------------
+// ------------------------------- Delete Requests -----------------------------------
+// -----------------------------------------------------------------------------------
+// /articles will delete all articles from the database
+app.delete("/articles", (req, res) => {
+    Article.deleteMany((err) => {
+        if (err) {
+            res.send(err);
+        } else {
+            res.send("Successfully deleted all articles.");
+        }
+    });
+});
