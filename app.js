@@ -1,11 +1,11 @@
-// npm and express includes
+// npm aincludes
 import express from "express"; // npm install express
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-// import _ from "lodash";
-// import https from "https"; // for forming external get requests
+// import _ from "lodash";        // nice string manipulation
+// import https from "https";     // for forming external get requests
 
 // local includes
 // import * as date from "./src/date.js";
@@ -28,35 +28,35 @@ app.use(express.static(path.join(__dirname, "/public")));
 // ------------------------------- Mongoose Setup ------------------------------------
 // -----------------------------------------------------------------------------------
 // connect to MongoDB - local connection
-// mongoose.connect("mongodb://localhost:27017/blogWebsiteDB", {
-//     useNewUrlParser: true,
-// });
+mongoose.connect("mongodb://localhost:27017/wikiDB", {
+    useNewUrlParser: true,
+});
 // connect to MongoDB Atlas (the cloud)
-mongoose.connect(
-    "mongodb+srv://" +
-        process.env.MONGODB_USER +
-        ":" +
-        process.env.MONGODB_PASS +
-        "@cluster0.ovomich.mongodb.net/blogWebsiteDB?retryWrites=true&w=majority",
-    {
-        useNewUrlParser: true,
-    }
-);
+// mongoose.connect(
+//     "mongodb+srv://" +
+//         process.env.MONGODB_USER +
+//         ":" +
+//         process.env.MONGODB_PASS +
+//         "@cluster0.ovomich.mongodb.net/wikiDB?retryWrites=true&w=majority",
+//     {
+//         useNewUrlParser: true,
+//     }
+// );
 
 // schema
-const postSchema = new mongoose.Schema({
+const articleSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: [true, "ERROR: Your blog post needs a title."],
+        required: [true, "ERROR: Your article post needs a title."],
     },
     content: {
         type: String,
-        required: [true, "ERROR: Your blog post needs some content."],
+        required: [true, "ERROR: Your article post needs some content."],
     },
 });
 
 // model: mongoose will auto make it plural "posts"
-const Post = mongoose.model("Post", postSchema);
+const Article = mongoose.model("Article", articleSchema);
 
 // -----------------------------------------------------------------------------------
 // ---------------------------------- Listening --------------------------------------
@@ -68,6 +68,18 @@ app.listen(port, () => {
 // -----------------------------------------------------------------------------------
 // --------------------------------- Get Requests ------------------------------------
 // -----------------------------------------------------------------------------------
+// /articles will return all articles in the collection
+app.get("/articles", (req, res) => {
+    Article.find((err, articles) => {
+        if (err) {
+            // console.log(err);
+            res.send(err);
+        } else {
+            // console.log(articles);
+            res.send(articles);
+        }
+    });
+});
 
 // -----------------------------------------------------------------------------------
 // -------------------------------- Post Requests ------------------------------------
