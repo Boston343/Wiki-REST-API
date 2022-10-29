@@ -28,20 +28,20 @@ app.use(express.static(path.join(__dirname, "/public")));
 // ------------------------------- Mongoose Setup ------------------------------------
 // -----------------------------------------------------------------------------------
 // connect to MongoDB - local connection
-mongoose.connect("mongodb://localhost:27017/wikiDB", {
-    useNewUrlParser: true,
-});
+// mongoose.connect("mongodb://localhost:27017/wikiDB", {
+//     useNewUrlParser: true,
+// });
 // connect to MongoDB Atlas (the cloud)
-// mongoose.connect(
-//     "mongodb+srv://" +
-//         process.env.MONGODB_USER +
-//         ":" +
-//         process.env.MONGODB_PASS +
-//         "@cluster0.ovomich.mongodb.net/wikiDB?retryWrites=true&w=majority",
-//     {
-//         useNewUrlParser: true,
-//     }
-// );
+mongoose.connect(
+    "mongodb+srv://" +
+        process.env.MONGODB_USER +
+        ":" +
+        process.env.MONGODB_PASS +
+        "@cluster0.ovomich.mongodb.net/wikiDB?retryWrites=true&w=majority",
+    {
+        useNewUrlParser: true,
+    }
+);
 
 // schema
 const articleSchema = new mongoose.Schema({
